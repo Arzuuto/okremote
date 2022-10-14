@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  backend:
+    container_name: backend
+    build: ./BackEnd
+    env_file:
+      - .env
+    environment:
+      - DB_URL=postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+    ports:
+      - ${API_PORT}:${API_PORT}
+    depends_on:
+      - database
+    networks:
+      - network_backend
+      - network_database
+
+  database:
+    image: postgres:14-alpine
+    container_name: database_test
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    networks:
+      - network_database
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  frontend:
+    container_name: frontend
+    build: ./FrontEnd
+    env_file:
+      - .env
+    ports:
+      - ${CLIENT_PORT}:${CLIENT_PORT}
+    depends_on:
+      - backend
+    networks:
+      - network_backend
+
+networks:
+  network_backend:
+  network_database:
+
+volumes:
+  db-data:
